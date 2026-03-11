@@ -1,0 +1,146 @@
+{
+    "info_general": {
+        "filas": 49071,
+        "columnas": 9,
+        "lista_columnas": [
+            "fecha",
+            "equipo_local",
+            "equipo_visitante",
+            "home_score",
+            "away_score",
+            "tournament",
+            "city",
+            "country",
+            "neutral"
+        ],
+        "duplicados": 0
+    },
+    "nulos": {
+        "fecha": 0,
+        "equipo_local": 0,
+        "equipo_visitante": 0,
+        "home_score": 0,
+        "away_score": 0,
+        "tournament": 0,
+        "city": 0,
+        "country": 0,
+        "neutral": 0
+    },
+    "estadisticas": {
+        "home_score": {
+            "count": 49071.0,
+            "mean": 1.7562715249332599,
+            "std": 1.7713673116567978,
+            "min": 0.0,
+            "25%": 1.0,
+            "50%": 1.0,
+            "75%": 2.0,
+            "max": 31.0
+        },
+        "away_score": {
+            "count": 49071.0,
+            "mean": 1.1821849972488843,
+            "std": 1.4015716972131966,
+            "min": 0.0,
+            "25%": 0.0,
+            "50%": 1.0,
+            "75%": 2.0,
+            "max": 21.0
+        }
+    },
+    "outliers": {
+        "home_score": 6284,
+        "away_score": 689
+    },
+    "categoricas": {
+        "fecha": {
+            "2012-02-29": 66,
+            "2016-03-29": 64,
+            "2025-06-10": 62,
+            "2025-03-25": 61,
+            "2008-03-26": 60,
+            "2014-03-05": 59,
+            "2023-11-21": 58,
+            "2012-11-14": 56,
+            "2024-03-26": 56,
+            "2011-11-11": 55
+        },
+        "equipo_local": {
+            "Brazil": 610,
+            "Argentina": 599,
+            "Mexico": 596,
+            "Germany": 552,
+            "South Korea": 549,
+            "England": 546,
+            "France": 536,
+            "Sweden": 532,
+            "United States": 495,
+            "Hungary": 495
+        },
+        "equipo_visitante": {
+            "Uruguay": 581,
+            "Sweden": 565,
+            "England": 540,
+            "Hungary": 507,
+            "Paraguay": 493,
+            "Germany": 475,
+            "Argentina": 463,
+            "Poland": 462,
+            "Zambia": 460,
+            "South Korea": 454
+        },
+        "tournament": {
+            "Friendly": 18181,
+            "FIFA World Cup qualification": 8755,
+            "UEFA Euro qualification": 2824,
+            "African Cup of Nations qualification": 2327,
+            "FIFA World Cup": 964,
+            "Copa Am\u00e9rica": 869,
+            "African Cup of Nations": 845,
+            "AFC Asian Cup qualification": 829,
+            "UEFA Nations League": 658,
+            "CECAFA Cup": 620
+        },
+        "city": {
+            "Kuala Lumpur": 739,
+            "Bangkok": 580,
+            "Doha": 560,
+            "London": 443,
+            "Budapest": 434,
+            "Kuwait City": 377,
+            "Montevideo": 374,
+            "Vienna": 362,
+            "Oslo": 357,
+            "Copenhagen": 355
+        },
+        "country": {
+            "United States": 1472,
+            "France": 912,
+            "Malaysia": 830,
+            "England": 761,
+            "Qatar": 760,
+            "Thailand": 722,
+            "Sweden": 686,
+            "Germany": 683,
+            "South Africa": 607,
+            "United Arab Emirates": 602
+        }
+    },
+    "correlaciones": {
+        "home_score": {
+            "home_score": 1.0,
+            "away_score": -0.14522406299179685,
+            "neutral": -0.029143055204865768
+        },
+        "away_score": {
+            "home_score": -0.14522406299179685,
+            "away_score": 1.0,
+            "neutral": 0.08027761321830808
+        },
+        "neutral": {
+            "home_score": -0.029143055204865768,
+            "away_score": 0.08027761321830808,
+            "neutral": 1.0
+        }
+    }
+}
