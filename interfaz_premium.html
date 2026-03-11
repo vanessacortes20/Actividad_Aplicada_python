@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Data Analytics Pro</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .chart-container {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+        .chart-container:hover {
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.1);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #a855f7 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        select {
+            background-color: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            color: #e2e8f0;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            outline: none;
+            width: 100%;
+        }
+        select:focus { border-color: rgba(168, 85, 247, 0.8); }
+        .tab-btn.active {
+            border-bottom: 2px solid #22d3ee;
+            color: #22d3ee;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body class="bg-[#0b1120] min-h-screen text-slate-200">
+
+    <!-- Navbar Oscuro -->
+    <nav class="bg-slate-900 border-b border-slate-800 text-white px-6 py-4 flex justify-between items-center shadow-lg relative z-20">
+        <div class="flex items-center space-x-3">
+            <i class="fas fa-network-wired text-cyan-400 text-2xl"></i>
+            <span class="text-xl font-bold tracking-wide gradient-text">Universal AI Analytics</span>
+        </div>
+        <div class="space-x-8 text-sm font-medium hidden sm:flex">
+            <button onclick="switchTab('tab-upload')" id="btn-tab-upload" class="tab-btn active pb-1 transition text-slate-400 hover:text-cyan-300">1. Carga de CSV (POST)</button>
+            <button onclick="switchTab('tab-eda')" id="btn-tab-eda" class="tab-btn pb-1 transition text-slate-400 hover:text-cyan-300 hidden">2. Limpieza y EDA</button>
+            <button onclick="switchTab('tab-explorador')" id="btn-tab-explorador" class="tab-btn pb-1 transition text-slate-400 hover:text-cyan-300 hidden">3. Explorador Visual</button>
+            <button onclick="switchTab('tab-api'); fetchHistorial();" id="btn-tab-api" class="tab-btn pb-1 transition text-slate-400 hover:text-cyan-300 hidden">4. Memoria API (CRUD)</button>
+        </div>
+    </nav>
+
+    <div class="glass-card w-full max-w-7xl mx-auto rounded-[2rem] p-6 md:p-10 relative overflow-hidden mt-8 mb-10">
+        <!-- Generative Glow -->
+        <div class="absolute -top-40 -right-40 w-96 h-96 bg-purple-600 rounded-full mix-blend-multiply filter blur-[100px] opacity-20"></div>
+        <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-cyan-600 rounded-full mix-blend-multiply filter blur-[100px] opacity-20"></div>
+
+        <!-- TAB 1: CARGA DE DATOS -->
+        <div id="tab-upload" class="tab-content relative z-10 block transition-opacity duration-500">
+            <div class="text-center mb-10">
+                <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-3 text-white">Paso 1: Carga y Validación</h1>
+                <p class="text-slate-400 text-sm max-w-2xl mx-auto">Sube CUALQUIER archivo CSV. El motor Pandas dinámico lo perfilará y nuestro Explorador Visual extraerá los registros.</p>
+            </div>
+
+            <div class="max-w-xl mx-auto mb-10 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+                <form id="uploadForm" class="flex-grow flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+                    <div class="relative group flex-grow">
+                        <div class="absolute -inset-0.5 bg-gradient-to-r from-cyan-600/50 to-purple-600/50 rounded-xl blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
+                        <div class="relative bg-slate-900 border border-slate-700/50 rounded-xl p-3 flex items-center justify-between cursor-pointer hover:bg-slate-800 transition">
+                            <div class="flex items-center space-x-4 overflow-hidden">
+                                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center border border-slate-700 shadow-md">
+                                    <i class="fas fa-file-csv text-xl text-cyan-400"></i>
+                                </div>
+                                <span id="fileName" class="text-slate-400 text-sm font-medium truncate">Seleccionar dataset (.csv)</span>
+                            </div>
+                            <input type="file" id="csvFile" accept=".csv" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submitBtn" class="px-6 py-3 text-white font-bold transition-all duration-300 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-xl hover:from-blue-500 hover:to-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] whitespace-nowrap">
+                        <i class="fas fa-microchip mr-2"></i> Procesar
+                    </button>
+                </form>
+            </div>
+
+            <div id="loading" class="hidden flex-col items-center justify-center my-12 relative z-10">
+                <i class="fas fa-circle-nodes fa-spin text-5xl text-cyan-500 mb-4"></i>
+                <p class="text-base text-slate-300 animate-pulse">Pandas AI extrayendo registros y métricas...</p>
+            </div>
+        </div>
+
+        <!-- Contenedor General para Resultados (Tabs 2 y 3) -->
+        <div id="results-container" class="hidden opacity-0 transition-opacity duration-700 relative z-10">
+            
+            <div class="flex flex-col md:flex-row justify-between items-center bg-emerald-900/40 border border-emerald-500/30 rounded-xl p-3 mb-8 text-center shadow-inner max-w-xl mx-auto">
+                <p class="text-emerald-400 font-medium text-sm w-full"><i class="fas fa-check-circle mr-1"></i> Análisis guardado en el backend exitosamente mediante <span class="bg-emerald-800 text-emerald-100 px-2 py-0.5 rounded font-mono text-xs">POST /analizar/csv</span> (API ID: #<span id="resId"></span>)</p>
+            </div>
+
+            <!-- TAB 2: LIMPIEZA Y EDA AUTOMÁTICO -->
+            <div id="tab-eda" class="tab-content hidden animate-fade-in">
+                <h2 class="text-2xl font-bold text-white mb-2 text-center border-b border-slate-700/50 pb-4">Paso 2: Limpieza y EDA (Perfilado Automático)</h2>
+                <p class="text-slate-400 text-sm text-center mb-8">El motor separó las columnas numéricas de las categóricas e inferió estadísticas profundas dinámicamente.</p>
+                
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4" id="dynamicCards">
+                    <!-- Cards -->
+                </div>
+
+                <!-- TABLAS DE RESUMEN DETALLADO -->
+                <h2 class="text-xl font-bold text-white mt-10 mb-4 border-b border-slate-700 pb-2"><i class="fas fa-table text-purple-400 mr-2"></i> Análisis Detallado: Variables Numéricas</h2>
+                <div class="overflow-x-auto bg-slate-800/40 border border-slate-700/50 rounded-xl shadow-lg mb-8">
+                    <table class="w-full text-sm text-left text-slate-300">
+                        <thead class="text-xs text-slate-400 uppercase bg-slate-900/60 border-b border-slate-700/50">
+                            <tr>
+                                <th class="px-4 py-3">Variable</th>
+                                <th class="px-4 py-3">Nulos</th>
+                                <th class="px-4 py-3">Únicos</th>
+                                <th class="px-4 py-3">Promedio</th>
+                                <th class="px-4 py-3">Mediana</th>
+                                <th class="px-4 py-3">Desv. Est.</th>
+                                <th class="px-4 py-3 text-emerald-400">Máximo</th>
+                                <th class="px-4 py-3 text-rose-400">Mínimo</th>
+                                <th class="px-4 py-3 text-blue-400">Suma Tot.</th>
+                            </tr>
+                        </thead>
+                        <tbody id="numTableBody" class="divide-y divide-slate-700/50">
+                        </tbody>
+                    </table>
+                </div>
+
+                <h2 class="text-xl font-bold text-white mb-4 border-b border-slate-700 pb-2"><i class="fas fa-tags text-pink-400 mr-2"></i> Análisis Detallado: Variables Categóricas</h2>
+                <div class="overflow-x-auto bg-slate-800/40 border border-slate-700/50 rounded-xl shadow-lg mb-10">
+                    <table class="w-full text-sm text-left text-slate-300">
+                        <thead class="text-xs text-slate-400 uppercase bg-slate-900/60 border-b border-slate-700/50">
+                            <tr>
+                                <th class="px-4 py-3 w-1/4">Variable</th>
+                                <th class="px-4 py-3 w-24">Nulos</th>
+                                <th class="px-4 py-3 w-24">Únicos</th>
+                                <th class="px-4 py-3">Top Frecuencias (Distribución)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="catTableBody" class="divide-y divide-slate-700/50">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h2 class="text-xl font-bold text-white mt-4 mb-4 border-b border-slate-700 pb-2"><i class="fas fa-chart-pie text-cyan-400 mr-2"></i> Gráficos Categóricos Automáticos</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6" id="dynamicChartsRow1">
+                    <!-- Gráficos Row 1 -->
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="dynamicChartsRow2">
+                    <!-- Gráficos Row 2 -->
+                </div>
+            </div>
+
+            <!-- TAB 3: EXPLORADOR VISUAL INTERACTIVO -->
+            <div id="tab-explorador" class="tab-content hidden animate-fade-in">
+                <h2 class="text-2xl font-bold text-white mb-2 text-center border-b border-slate-700/50 pb-4">Paso 3: Exploración e Interacción Dinámica</h2>
+                <p class="text-slate-400 text-sm text-center mb-8">Interactúa localmente con los datos crudos extraídos de la memoria usando JavaScript map/reduce.</p>
+                
+                <div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-6 shadow-lg">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="space-y-4 md:col-span-1 border-r border-slate-700/50 pr-6">
+                            
+                            <!-- NUEVA SECCION: FILTRADO -->
+                            <div class="p-3 bg-slate-900/80 border border-slate-700 rounded-lg shadow-inner">
+                                <label class="block text-[10px] font-bold text-orange-400 uppercase tracking-wider mb-2"><i class="fas fa-filter mr-1"></i> Filtro Específico (Opcional)</label>
+                                
+                                <select id="selFilterLevel1" class="w-full text-xs font-medium bg-slate-800 border-slate-600 text-slate-300 mb-2">
+                                    <option value="NONE">-- Sin Filtrar (Usar toda la data) --</option>
+                                </select>
+                                
+                                <select id="selFilterLevel2" class="w-full text-xs font-medium bg-slate-800 border-slate-600 text-slate-300 hidden" disabled>
+                                    <option value="NONE">Cargando...</option>
+                                </select>
+                            </div>
+
+                            <hr class="border-slate-700/50">
+
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Variable Eje X (Agrupación)</label>
+                                <select id="selVarX" class="w-full text-xs font-medium"></select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Variable Eje Y (Valor)</label>
+                                <select id="selVarY" class="w-full text-xs font-medium"></select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Cálculo Matemático</label>
+                                <select id="selMetrica" class="w-full text-xs font-medium bg-slate-900 border-purple-500 text-purple-200">
+                                    <option value="COUNT">Frecuencia / Conteo (Ignora Y)</option>
+                                    <option value="SUM">Suma Total</option>
+                                    <option value="AVG">Promedio</option>
+                                    <option value="MAX">Valor Máximo</option>
+                                    <option value="MIN">Valor Mínimo</option>
+                                    <option value="MODE">Moda (Más repetido)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Tipo de Gráfico</label>
+                                <select id="selTipoGrafico" class="w-full text-xs font-medium bg-slate-900 border-cyan-500 text-cyan-200">
+                                    <option value="bar">Barras Verticales</option>
+                                    <option value="horizontalBar">Barras Horizontales</option>
+                                    <option value="line">Línea de Tendencia</option>
+                                    <option value="doughnut">Dona (Proporciones)</option>
+                                    <option value="pie">Pastel (Proporciones)</option>
+                                </select>
+                            </div>
+                            
+                            <button id="btnGenerarExp" class="w-full py-3 mt-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 border border-purple-400/50 rounded-lg text-white text-sm font-bold transition shadow-lg shadow-purple-900/50">
+                                <i class="fas fa-magic mr-2"></i> Dibujar Gráfico
+                            </button>
+                        </div>
+
+                        <div class="md:col-span-3 relative h-[36rem] flex flex-col pl-2">
+                            <h3 class="text-xl text-center text-slate-200 font-bold mb-1" id="expChartTitle">Gráfico de Interacción Libre</h3>
+                            <p class="text-center text-xs text-slate-400 mb-4" id="expChartSubTitle">Ajusta los parámetros de la izquierda para analizar los datos en tiempo real.</p>
+                            <div class="flex-grow relative bg-slate-900/60 rounded-xl p-4 border border-slate-700/50 shadow-inner">
+                                <canvas id="explorerChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: HISTORIAL API CRUD -->
+            <div id="tab-api" class="tab-content hidden animate-fade-in relative z-10 block">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-white mb-2"><i class="fas fa-database text-purple-400 mr-2"></i> Memoria Interactiva (CRUD API)</h2>
+                    <p class="text-slate-400 text-sm max-w-2xl mx-auto">Requisitos de la Rúbrica: Demostración visual de los endpoints en memoria <code class="bg-slate-800 text-cyan-300 px-1 rounded">GET /historial</code>, <code class="bg-slate-800 text-indigo-300 px-1 rounded">GET /historial/{id}</code> y <code class="bg-slate-800 text-rose-300 px-1 rounded">DELETE /historial/{id}</code></p>
+                </div>
+                
+                <div class="bg-slate-800/40 border border-slate-700/50 rounded-xl shadow-lg mb-8 overflow-hidden">
+                    <div class="p-4 bg-slate-800/80 border-b border-slate-700 flex justify-between items-center">
+                        <span class="font-bold text-slate-200"><i class="fas fa-server mr-2 text-cyan-400"></i> Registros en el Servidor Local</span>
+                        <button onclick="fetchHistorial()" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-xs font-semibold rounded text-slate-300 transition duration-200"><i class="fas fa-sync-alt mr-1"></i> Refrescar (GET)</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-slate-300">
+                            <thead class="text-xs text-slate-400 uppercase bg-slate-900/60 border-b border-slate-700/50">
+                                <tr>
+                                    <th class="px-4 py-3 w-16 text-center">API ID</th>
+                                    <th class="px-4 py-3">Nombre del Archivo Base</th>
+                                    <th class="px-4 py-3 w-32 text-center">Filas Extraídas</th>
+                                    <th class="px-4 py-3 w-32 text-center">Columnas</th>
+                                    <th class="px-4 py-3 w-40 text-center">Acciones Endpoint</th>
+                                </tr>
+                            </thead>
+                            <tbody id="apiTableBody" class="divide-y divide-slate-700/50">
+                                <!-- Filas generadas por JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Generative JavaScript Engine -->
+    <script>
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 23, 42, 0.9)';
+        Chart.defaults.responsive = true;
+        Chart.defaults.maintainAspectRatio = false;
+
+        let activeCharts = [];
+        let explorerChartInstance = null;
+        let globalRawData = [];
+
+        // Tab Navigation Logic
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.add('hidden');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'text-cyan-400');
+                btn.classList.add('text-slate-400');
+            });
+
+            document.getElementById(tabId).classList.remove('hidden');
+            const targetBtn = document.getElementById('btn-' + tabId);
+            if(targetBtn){
+                targetBtn.classList.add('active', 'text-cyan-400');
+                targetBtn.classList.remove('text-slate-400');
+            }
+        }
+
+        // Upload Logic
+        document.getElementById('csvFile').addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                document.getElementById('fileName').textContent = e.target.files[0].name;
+                document.getElementById('fileName').classList.add('text-white');
+            }
+        });
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('csvFile');
+            if (fileInput.files.length === 0) return;
+
+            const formData = new FormData();
+            formData.append('archivo', fileInput.files[0]);
+
+            const btn = document.getElementById('submitBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> POST /analizar/csv...';
+            document.getElementById('results-container').classList.add('hidden', 'opacity-0');
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('loading').classList.add('flex');
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/analizar/csv', { method: 'POST', body: formData });
+                if (!response.ok) throw new Error((await response.json()).detail || "Error del servidor.");
+                const data = await response.json();
+                
+                buildGenerativeDashboard(data);
+                
+                // Mostrar los botones de Tab y avanzar a EDA
+                document.getElementById('btn-tab-eda').classList.remove('hidden');
+                document.getElementById('btn-tab-explorador').classList.remove('hidden');
+                document.getElementById('btn-tab-api').classList.remove('hidden');
+                switchTab('tab-eda');
+
+            } catch (error) {
+                alert("Uy, falló: " + error.message);
+            } finally {
+                document.getElementById('loading').classList.add('hidden', 'flex');
+                btn.innerHTML = '<i class="fas fa-microchip mr-2"></i> Procesar';
+            }
+        });
+
+        function buildGenerativeDashboard(data) {
+            globalRawData = data.registros_brutos || [];
+
+            const cardsContainer = document.getElementById('dynamicCards');
+            const row1 = document.getElementById('dynamicChartsRow1');
+            const row2 = document.getElementById('dynamicChartsRow2');
+
+            cardsContainer.innerHTML = '';
+            row1.innerHTML = '';
+            row2.innerHTML = '';
+
+            activeCharts.forEach(c => c.destroy());
+            activeCharts = [];
+
+            const keysNum = Object.keys(data.resumen_numerico);
+            const keysCat = Object.keys(data.resumen_categorico);
+
+            // Populating visual explorer selectors FOR EVERY VARIABLE
+            const selX = document.getElementById('selVarX');
+            const selY = document.getElementById('selVarY');
+            const selF1 = document.getElementById('selFilterLevel1');
+            
+            selX.innerHTML = '';
+            selY.innerHTML = '';
+            selF1.innerHTML = '<option value="NONE">-- Sin Filtrar (Usar toda la data) --</option>';
+            
+            data.nombres_columnas.forEach(col => {
+                let optX = document.createElement('option');
+                optX.value = col; optX.textContent = col;
+                selX.appendChild(optX);
+                
+                let optY = document.createElement('option');
+                optY.value = col; optY.textContent = col;
+                selY.appendChild(optY);
+                
+                let optF1 = document.createElement('option');
+                optF1.value = col; optF1.textContent = 'Filtrar por: ' + col;
+                selF1.appendChild(optF1);
+            });
+
+            if(data.nombres_columnas.length > 0) {
+                updateExplorerChart();
+            }
+
+            // Cards Construction
+            let firstNumCol = keysNum.length > 0 ? keysNum[0] : null;
+            let avg = firstNumCol ? data.resumen_numerico[firstNumCol].promedio : 0;
+            let max = firstNumCol ? data.resumen_numerico[firstNumCol].maximo : 0;
+            let min = firstNumCol ? data.resumen_numerico[firstNumCol].minimo : 0;
+
+            cardsContainer.innerHTML = `
+                <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-700/50 border-t-purple-500 border-t-2 shadow-lg">
+                    <p class="text-xs text-slate-400 mb-1 uppercase font-semibold">Total Registros (Filas)</p>
+                    <p class="text-3xl font-extrabold text-white">${data.total_filas.toLocaleString()}</p>
+                </div>
+                <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-700/50 border-t-indigo-500 border-t-2 shadow-lg">
+                    <p class="text-xs text-slate-400 mb-1 uppercase font-semibold truncate" title="${firstNumCol ? 'Promedio de ' + firstNumCol : 'Sin Variables Numéricas'}">Promedio ${firstNumCol ? firstNumCol.split(' ')[0] : ''}</p>
+                    <p class="text-3xl font-extrabold text-white">${avg.toLocaleString()}</p>
+                </div>
+                <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-700/50 border-t-pink-500 border-t-2 shadow-lg">
+                    <p class="text-xs text-slate-400 mb-1 uppercase font-semibold truncate">Máx / Mín ${firstNumCol ? firstNumCol.split(' ')[0] : ''}</p>
+                    <p class="text-3xl font-extrabold text-white">
+                        <span class="text-emerald-400">${max.toLocaleString()}</span> <span class="text-slate-600 text-lg">/</span> <span class="text-rose-400">${min.toLocaleString()}</span>
+                    </p>
+                </div>
+                <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-700/50 border-t-sky-500 border-t-2 shadow-lg">
+                    <p class="text-xs text-slate-400 mb-1 uppercase font-semibold">Total Variables detectadas</p>
+                    <p class="text-3xl font-extrabold text-white">${data.total_columnas}</p>
+                </div>
+            `;
+
+            // Rellenar las nuevas tablas de Análisis Detallado
+            const numTBody = document.getElementById('numTableBody');
+            const catTBody = document.getElementById('catTableBody');
+            numTBody.innerHTML = '';
+            catTBody.innerHTML = '';
+
+            keysNum.forEach(col => {
+                const stats = data.resumen_numerico[col];
+                let tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-700/30 transition";
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-medium text-white">${col}</td>
+                    <td class="px-4 py-3">${stats.valores_nulos.toLocaleString()}</td>
+                    <td class="px-4 py-3">${stats.valores_unicos.toLocaleString()}</td>
+                    <td class="px-4 py-3">${stats.promedio.toLocaleString()}</td>
+                    <td class="px-4 py-3">${stats.mediana.toLocaleString()}</td>
+                    <td class="px-4 py-3">${stats.desviacion_estandar.toLocaleString()}</td>
+                    <td class="px-4 py-3 text-emerald-400 font-semibold">${stats.maximo.toLocaleString()}</td>
+                    <td class="px-4 py-3 text-rose-400 font-semibold">${stats.minimo.toLocaleString()}</td>
+                    <td class="px-4 py-3 text-blue-400 font-semibold">${stats.suma.toLocaleString()}</td>
+                `;
+                numTBody.appendChild(tr);
+            });
+
+            keysCat.forEach(col => {
+                const stats = data.resumen_categorico[col];
+                let freqStr = Object.entries(stats.top_frecuencias)
+                    .map(([k, v]) => `<span class="bg-slate-700 border border-slate-600 px-2 py-1 rounded text-xs mr-1 mb-1 inline-block">${k}: <b>${v.toLocaleString()}</b></span>`)
+                    .join(' ');
+                if(freqStr === "") freqStr = '<span class="text-slate-500 italic">N/A</span>';
+
+                let tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-700/30 transition";
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-medium text-white">${col}</td>
+                    <td class="px-4 py-3">${stats.valores_nulos}</td>
+                    <td class="px-4 py-3">${stats.valores_unicos.toLocaleString()}</td>
+                    <td class="px-4 py-3">${freqStr}</td>
+                `;
+                catTBody.appendChild(tr);
+            });
+
+            // Grid 2x2 Construction
+            const chartsToDraw = keysCat.slice(0, 4);
+            const chartConfigs = [
+                { type: 'doughnut', icon: 'fa-trophy text-yellow-500', container: row1 },
+                { type: 'line', icon: 'fa-chart-line text-sky-500', container: row1 },
+                { type: 'bar', icon: 'fa-globe-americas text-emerald-500', container: row2, horizontal: true },
+                { type: 'polarArea', icon: 'fa-map-marker-alt text-rose-500', container: row2 }
+            ];
+
+            const standardPalette = ['#ec4899', '#8b5cf6', '#3b82f6', '#10b981', '#f59e0b'];
+
+            chartsToDraw.forEach((col, index) => {
+                const config = chartConfigs[index];
+                const freqDict = data.resumen_categorico[col].top_frecuencias;
+                
+                const labels = config.type === 'line' ? Object.keys(freqDict).sort() : Object.keys(freqDict);
+                const values = config.type === 'line' ? labels.map(l => freqDict[l]) : Object.values(freqDict);
+
+                const wrapper = document.createElement('div');
+                wrapper.className = "chart-container flex flex-col h-80 bg-slate-800/20";
+                wrapper.innerHTML = `
+                    <h3 class="text-sm font-semibold text-slate-300 uppercase tracking-wide truncate">
+                        <i class="fas ${config.icon} mr-2"></i> ${col}
+                    </h3>
+                    <p class="text-[10px] text-slate-500 mb-2 uppercase tracking-wide">Métrica: Frecuencia (Conteo)</p>
+                    <div class="relative flex-grow p-2">
+                        <canvas id="chart-grid-${index}"></canvas>
+                    </div>
+                `;
+                config.container.appendChild(wrapper);
+
+                const ctx = document.getElementById(`chart-grid-${index}`);
+                
+                let datasetConfig = {
+                    data: values,
+                    borderWidth: config.type === 'line' ? 3 : (config.type === 'polarArea' ? 1 : 0),
+                    borderColor: 'rgba(15, 23, 42, 1)'
+                };
+
+                if (config.type === 'line') {
+                    datasetConfig.label = "Tendencia";
+                    datasetConfig.borderColor = '#0ea5e9';
+                    datasetConfig.backgroundColor = 'rgba(14, 165, 233, 0.1)';
+                    datasetConfig.fill = true;
+                    datasetConfig.tension = 0.4;
+                    datasetConfig.pointBackgroundColor = '#0ea5e9';
+                    datasetConfig.pointRadius = 4;
+                } else if (config.type === 'bar') {
+                    datasetConfig.label = "Frecuencia";
+                    datasetConfig.backgroundColor = '#10b981';
+                    datasetConfig.borderRadius = 6;
+                } else {
+                    datasetConfig.backgroundColor = standardPalette.map(c => config.type === 'polarArea' ? c.replace(')', ', 0.7)').replace('rgb', 'rgba') : c);
+                }
+
+                const totalValues = values.reduce((a, b) => a + b, 0);
+
+                const chartOptions = {
+                    plugins: { 
+                        legend: { display: (config.type !== 'bar' && config.type !== 'line'), position: 'right' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || "Frecuencia";
+                                    let val = context.parsed.y !== null && context.parsed.y !== undefined ? context.parsed.y : context.parsed;
+                                    if(config.type === 'bar' && config.horizontal) val = context.parsed.x; // For horizontal bar
+                                    
+                                    let percentage = ((val / totalValues) * 100).toFixed(1) + "%";
+                                    return `${label}: ${val} (${percentage} del total graficado)`;
+                                }
+                            }
+                        }
+                    }
+                };
+
+                if (config.type === 'doughnut') chartOptions.cutout = '65%';
+                if (config.type === 'polarArea') chartOptions.scales = { r: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { display: false } } };
+
+                if (config.type === 'bar') {
+                    if (config.horizontal) chartOptions.indexAxis = 'y';
+                    chartOptions.scales = { x: { grid: { color: 'rgba(255,255,255,0.05)' } }, y: { grid: { display: false } } };
+                }
+
+                if (config.type === 'line') {
+                    chartOptions.scales = { y: { grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true }, x: { grid: { display: false } } };
+                }
+
+                const newChart = new Chart(ctx, {
+                    type: config.type,
+                    data: { labels: labels, datasets: [datasetConfig] },
+                    options: chartOptions
+                });
+                activeCharts.push(newChart);
+            });
+
+            document.getElementById('resId').textContent = data.id;
+            document.getElementById('results-container').classList.remove('hidden');
+            setTimeout(() => { document.getElementById('results-container').classList.add('opacity-100'); }, 100);
+        }
+
+        // Logic for Filter Cascade
+        document.getElementById('selFilterLevel1').addEventListener('change', function(e) {
+            const filterCol = e.target.value;
+            const selF2 = document.getElementById('selFilterLevel2');
+            
+            if (filterCol === 'NONE') {
+                selF2.classList.add('hidden');
+                selF2.disabled = true;
+                return;
+            }
+
+            // Get unique values for Level 2
+            let uniqueVals = new Set();
+            globalRawData.forEach(row => {
+               if (row[filterCol] !== null && row[filterCol] !== undefined) uniqueVals.add(String(row[filterCol]));
+            });
+            
+            let sortedVals = Array.from(uniqueVals).sort();
+            
+            selF2.innerHTML = '';
+            sortedVals.forEach(val => {
+                let opt = document.createElement('option');
+                opt.value = val; opt.textContent = "= '" + val + "'";
+                selF2.appendChild(opt);
+            });
+            
+            selF2.disabled = false;
+            selF2.classList.remove('hidden');
+        });
+
+
+        // Logic for Dynamic Interactive Explorer
+        document.getElementById('btnGenerarExp').addEventListener('click', updateExplorerChart);
+
+        function updateExplorerChart() {
+            if(!globalRawData || globalRawData.length === 0) return;
+            
+            const xCol = document.getElementById('selVarX').value;
+            const yCol = document.getElementById('selVarY').value;
+            const metrica = document.getElementById('selMetrica').value;
+            const tipoGraficoRaw = document.getElementById('selTipoGrafico').value;
+            
+            const filterCol = document.getElementById('selFilterLevel1').value;
+            const filterVal = document.getElementById('selFilterLevel2').value;
+
+            const titleEl = document.getElementById('expChartTitle');
+            const subTitleEl = document.getElementById('expChartSubTitle');
+
+            if(!xCol) return;
+
+            // 0. Filter Data if requested
+            let localData = globalRawData;
+            let filterTitleAddon = "";
+            if (filterCol !== "NONE" && filterVal) {
+                localData = globalRawData.filter(row => String(row[filterCol]) === filterVal);
+                filterTitleAddon = ` (Filtro: ${filterVal})`;
+            }
+
+            // If completely empty due to filter
+            if (localData.length === 0) {
+               titleEl.textContent = `Sin Resultados`;
+               subTitleEl.textContent = `No hay datos que cumplan con el filtro ${filterCol} = ${filterVal}`;
+               if(explorerChartInstance) explorerChartInstance.destroy();
+               return;
+            }
+
+            // 1. Group Raw Data
+            let groupedValues = {};
+            let counts = {};
+            
+            localData.forEach(row => {
+                let xVal = row[xCol];
+                if(xVal === null || xVal === undefined || xVal === "") xVal = "Desconocido (N/A)";
+                xVal = String(xVal);
+
+                if(!groupedValues[xVal]) {
+                    groupedValues[xVal] = [];
+                    counts[xVal] = 0;
+                }
+                
+                counts[xVal] += 1;
+                groupedValues[xVal].push(row[yCol]);
+            });
+
+            // 2. Aggregate Mathematics based on Metric
+            let aggregatedData = {};
+            let metricLabel = "";
+            let mathFailedOnText = false;
+
+            for (const [xKey, valuesArr] of Object.entries(groupedValues)) {
+                if (metrica === 'COUNT') {
+                    aggregatedData[xKey] = counts[xKey];
+                    metricLabel = "Frecuencia (Apariciones)";
+                } 
+                else if (metrica === 'MODE') {
+                    // Calculate Mode (Most frequent value even if string)
+                    let freqMap = {};
+                    let maxF = 0; let modeStr = "";
+                    valuesArr.forEach(v => {
+                        let vs = String(v);
+                        freqMap[vs] = (freqMap[vs] || 0) + 1;
+                        if(freqMap[vs] > maxF) { maxF = freqMap[vs]; modeStr = vs; }
+                    });
+                    
+                    let parsedMode = parseFloat(modeStr);
+                    // If mode is numeric we can plot it, otherwise we plot it's frequency and show it on tooltip
+                    aggregatedData[xKey] = isNaN(parsedMode) ? maxF : parsedMode; 
+                    metricLabel = `Moda de ${yCol}`;
+                }
+                else {
+                    // Sum, Avg, Max, Min require numeric data
+                    let nums = valuesArr.map(v => parseFloat(v)).filter(v => !isNaN(v));
+                    if (nums.length === 0) {
+                        aggregatedData[xKey] = 0;
+                        mathFailedOnText = true;
+                    } else {
+                        let sum = nums.reduce((a,b)=>a+b, 0);
+                        if (metrica === 'SUM') aggregatedData[xKey] = sum;
+                        if (metrica === 'AVG') aggregatedData[xKey] = sum / nums.length;
+                        if (metrica === 'MAX') aggregatedData[xKey] = Math.max(...nums);
+                        if (metrica === 'MIN') aggregatedData[xKey] = Math.min(...nums);
+                    }
+                    
+                    if (metrica === 'SUM') metricLabel = `Suma Total de ${yCol}`;
+                    if (metrica === 'AVG') metricLabel = `Promedio de ${yCol}`;
+                    if (metrica === 'MAX') metricLabel = `Máximo de ${yCol}`;
+                    if (metrica === 'MIN') metricLabel = `Mínimo de ${yCol}`;
+                }
+            }
+
+            // 3. Sort, Format and Slice Top 20 for readability
+            let sortedArr = Object.entries(aggregatedData);
+            
+            // If X is a date, sort ascending chronological. Else sort descending by value.
+            if(xCol.toLowerCase().includes('date') || xCol.toLowerCase().includes('fecha')) {
+                sortedArr.sort((a, b) => a[0].localeCompare(b[0]));
+            } else {
+                sortedArr.sort((a, b) => b[1] - a[1]);
+            }
+            
+            const top20 = sortedArr.slice(0, 20);
+            const labels = top20.map(i => i[0]);
+            const finalPlotValues = top20.map(i => i[1]);
+            const sumOfPlot = finalPlotValues.reduce((a, b) => a + b, 0);
+
+            titleEl.textContent = `${metricLabel} por ${xCol}${filterTitleAddon}`;
+            
+            if (mathFailedOnText) {
+                let nomMetrica = document.getElementById('selMetrica').options[document.getElementById('selMetrica').selectedIndex].text;
+                subTitleEl.innerHTML = `<span class="text-rose-400 font-semibold bg-rose-900/40 px-3 py-1 rounded inline-block border border-rose-500/50"><i class="fas fa-exclamation-triangle mr-1"></i> No se puede calcular "${nomMetrica}" de una columna de texto ('${yCol}'). Por favor, usa "Frecuencia / Conteo" para esto.</span>`;
+            } else {
+                subTitleEl.textContent = top20.length < sortedArr.length 
+                    ? `Mostrando el Top ${top20.length} de categorías ordenado. Total a calcular: ${sumOfPlot.toLocaleString()}`
+                    : `Total calculado: ${sumOfPlot.toLocaleString()}`;
+            }
+
+            if(explorerChartInstance) explorerChartInstance.destroy();
+
+            // 4. Transform Chart Type string
+            let chartType = tipoGraficoRaw;
+            let indexAxis = 'x';
+            if (chartType === 'horizontalBar') {
+                chartType = 'bar';
+                indexAxis = 'y';
+            }
+
+            // 5. Build the Chart
+            const ctx = document.getElementById('explorerChart');
+            
+            // Premium Palette array to color lines/donuts deeply
+            const palette = ['#8b5cf6', '#0ea5e9', '#10b981', '#f43f5e', '#f59e0b', '#8b5cf6', '#0ea5e9', '#10b981'];
+            let bgColor = chartType === 'bar' || chartType === 'line' ? '#a855f7' : palette;
+            let brColor = chartType === 'line' ? '#c084fc' : undefined;
+
+            explorerChartInstance = new Chart(ctx, {
+                type: chartType,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: metricLabel,
+                        data: finalPlotValues,
+                        backgroundColor: chartType === 'line' ? 'rgba(168, 85, 247, 0.1)' : bgColor,
+                        borderColor: brColor,
+                        borderWidth: chartType === 'line' ? 3 : 0,
+                        fill: chartType === 'line',
+                        tension: 0.3,
+                        pointBackgroundColor: '#a855f7',
+                        borderRadius: chartType === 'bar' ? 4 : 0
+                    }]
+                },
+                options: {
+                    indexAxis: indexAxis,
+                    plugins: { 
+                        legend: { display: ['pie', 'doughnut'].includes(chartType), position: 'right' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || "";
+                                    let val = context.parsed.y !== null && context.parsed.y !== undefined ? context.parsed.y : context.parsed;
+                                    if(chartType === 'bar' && indexAxis === 'y') val = context.parsed.x;
+                                    
+                                    // Always compute logic % to display
+                                    let percentage = sumOfPlot > 0 ? ((val / sumOfPlot) * 100).toFixed(1) + "%" : "0%";
+                                    return `${label}: ${val.toLocaleString()} (${percentage} del filtro aplicado)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            display: !['pie', 'doughnut'].includes(chartType), 
+                            ticks: { maxRotation: 45, minRotation: 0 }, 
+                            grid: { color: indexAxis === 'y' ? 'rgba(255,255,255,0.05)' : 'transparent' } 
+                        },
+                        y: { 
+                            display: !['pie', 'doughnut'].includes(chartType), 
+                            beginAtZero: true, 
+                            grid: { color: indexAxis === 'x' ? 'rgba(255,255,255,0.05)' : 'transparent' } 
+                        }
+                    }
+                }
+            });
+        }
+
+        // Logic for CRUD API Historial
+        async function fetchHistorial() {
+            const tbody = document.getElementById('apiTableBody');
+            tbody.innerHTML = '<tr><td colspan="5" class="py-10 text-center text-slate-400"><i class="fas fa-spinner fa-spin text-2xl mb-2 text-cyan-400"></i><br>Ejecutando GET /historial...</td></tr>';
+            
+            try {
+                const response = await fetch('http://127.0.0.1:8000/historial');
+                if (!response.ok) throw new Error("Error obteniendo el historial desde FastAPI");
+                const historias = await response.json();
+                
+                tbody.innerHTML = '';
+                
+                if (historias.length === 0) {
+                     tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-slate-500 italic"><i class="fas fa-ghost mr-2 text-slate-600"></i>La memoria del backend está vacía. Sube un archivo (POST).</td></tr>';
+                     return;
+                }
+
+                historias.forEach(h => {
+                    let tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-700/30 transition group";
+                    tr.innerHTML = `
+                        <td class="px-4 py-4 text-center">
+                            <span class="bg-purple-900/50 text-purple-300 font-mono font-bold px-2 py-1 rounded border border-purple-500/30">#${h.id}</span>
+                        </td>
+                        <td class="px-4 py-4 font-medium text-white">${h.fileName || "dataset_analizado.csv"}</td>
+                        <td class="px-4 py-4 text-center text-cyan-300 font-semibold">${h.total_filas.toLocaleString()}</td>
+                        <td class="px-4 py-4 text-center text-indigo-300 font-semibold">${h.total_columnas}</td>
+                        <td class="px-4 py-4 text-center space-x-2">
+                             <button onclick="viewHistoryItem(${h.id}, event)" class="text-slate-400 hover:text-cyan-400 transition" title="GET /historial/${h.id}"><i class="fas fa-eye text-lg"></i></button>
+                             <button onclick="deleteHistoryItem(${h.id}, event)" class="text-slate-400 hover:text-rose-400 transition" title="DELETE /historial/${h.id}"><i class="fas fa-trash-alt text-lg"></i></button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-4 text-center text-rose-400"><i class="fas fa-exclamation-triangle mr-2"></i>${error.message}</td></tr>`;
+            }
+        }
+
+        async function viewHistoryItem(id, event) {
+             const btn = event.currentTarget;
+             const icon = btn.innerHTML;
+             btn.innerHTML = '<i class="fas fa-spinner fa-spin text-cyan-400"></i>';
+             try {
+                const response = await fetch(`http://127.0.0.1:8000/historial/${id}`);
+                if (!response.ok) throw new Error("Registro no encontrado (404)");
+                const data = await response.json();
+                
+                // Regenerar el Dashboard entero con esta data antigua
+                buildGenerativeDashboard(data);
+                switchTab('tab-eda');
+                
+                // Pequeña alerta UI
+                alert(`¡Éxito! GET /historial/${id} devolvió los datos correctamente. Dashboard regenerado desde la memoria.`);
+             } catch (error) {
+                 alert("Error al cargar ID " + id + ": " + error.message);
+                 btn.innerHTML = icon;
+             }
+        }
+
+        async function deleteHistoryItem(id, event) {
+             if (!confirm(`¿Estás seguro de simular un DELETE a la API para borrar el ID #${id} de la memoria RAM?`)) return;
+             
+             const btn = event.currentTarget;
+             const tr = btn.closest('tr');
+             
+             try {
+                 const response = await fetch(`http://127.0.0.1:8000/historial/${id}`, { method: 'DELETE' });
+                 if (!response.ok) throw new Error((await response.json()).detail || "Error eliminando el registro");
+                 
+                 alert(`¡Éxito! DELETE /historial/${id} ejecutado correctamente. Registro eliminado de la memoria.`);
+                 
+                 tr.classList.add('bg-rose-900/50', 'opacity-0', 'transition-all', 'duration-500');
+                 setTimeout(() => fetchHistorial(), 500);
+
+             } catch (error) {
+                 alert("Error al intentar DELETE: " + error.message);
+             }
+        }
+    </script>
+</body>
+</html>
