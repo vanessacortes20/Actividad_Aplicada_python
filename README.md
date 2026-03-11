@@ -6,6 +6,23 @@ Desarrollado originalmente para analizar Partidos Históricos de Fútbol Interna
 
 ---
 
+## ⚽ Contexto del Proyecto y Dataset Original
+Este motor fue construido y testeado utilizando una extensa base de datos histórica del **Fútbol Internacional (1872 - 2024)**. El archivo CSV original (`dataset_espanol.csv`) contiene registros detallados de decenas de miles de partidos oficiales y amistosos.
+
+### 🎯 Objetivos del Proyecto (Fase Analítica)
+1. **Limpieza de Datos:** Estandarizar nombres de equipos y torneos, manejando valores nulos en locaciones.
+2. **Análisis Exploratorio (EDA):** Extraer métricas descriptivas clave como los promedios de goles históricos, torneos más frecuentes y ciudades sede predominantes.
+3. **Despliegue Dinámico:** Construir una API robusta que automatice este análisis matemático mediante Pandas y lo sirva a una interfaz gráfica web.
+
+### 📈 Hallazgos Clave del Análisis Descriptivo
+Al someter el dataset al motor de Pandas, se revelaron los siguientes hallazgos principales (visualizables en la pestaña *Explorador Interactivo* del Dashboard):
+* **Frecuencia de Torneos:** La abrumadora mayoría de los registros históricos corresponden a partidos *Amistosos (Friendly)*, superando por amplio margen a eventos formales como Clasificatorias Mundialistas o la Copa del Mundo en sí.
+* **Ciudades Sede Predominantes:** Ciudades europeas y latinoamericanas como *Kuala Lumpur*, *Doha* y *Londres* lideran históricamente la organización de partidos, sirviendo como hubs neutrales o recurrentes.
+* **Tendencia de Goleo:** El promedio de goles combinados ha ido fluctuando drásticamente a lo largo de las décadas (mayor goleo a principios del siglo XX, estabilizándose hacia épocas modernas).
+* **Factor de Localía (Top Equipos):** Existe una tendencia estadísticamente marcada donde el `Ganador` coincide con el `Equipo Local`, impulsando el diseño de las variables predictivas del proyecto.
+
+---
+
 ## 🏗️ Arquitectura y Tecnologías
 El proyecto se divide en dos capas fuertemente desacopladas:
 
