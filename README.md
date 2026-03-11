@@ -103,11 +103,13 @@ python -m uvicorn main:app --reload
 
 ---
 
-## 💻 Uso del Dashboard
-1. Con el servidor uvicorn corriendo, simplemente **haz doble clic** en el archivo físico `interfaz_premium.html` desde tu explorador de archivos para abrirlo en Chrome/Edge.
-2. Utiliza la zona central de Drag & Drop para subir el archivo `data/dataset_espanol.csv`.
-3. Navega dinámicamente por las pestañas de "Visión General", "Explorador Visual" y "Data Table EDA".
+## 💻 Uso del Dashboard (Interfaz Gráfica Principal)
+Mientras que Swagger UI es útil para pruebas técnicas, **el archivo `interfaz_premium.html` es el verdadero corazón interactivo del proyecto**. Fue diseñado explícitamente como una interfaz "Premium" para que cualquier usuario interactúe con el motor analítico de manera visual y estética, sin necesidad de saber programar.
 
-## 🧪 Pruebas de API (Swagger UI)
-Este proyecto cumple con estándares OpenAPI. Puedes testear todos los **Endpoints CRUD** sin necesidad de abrir el HTMl, visitando la consola autogenerada:
+1. Con tu servidor Uvicorn encendido localmente, ve a tus carpetas y **haz doble clic** directamente en el archivo `interfaz_premium.html` para abrirlo en Chrome, Safari o tu navegador favorito.
+2. Utiliza la zona interactiva central de arrastrar y soltar (Drag & Drop) para subir tu archivo `data/dataset_espanol.csv`.
+3. Navega de forma dinámica por las 4 modernas tarjetas horizontales ("Visión General", "Limpieza", "Explorador Visual" y la "Memoria API").
+
+## 🧪 Pruebas Técnicas de API (Swagger UI)
+Este proyecto cumple con estándares OpenAPI. Si deseas aislar el Frontend del análisis técnico estricto, puedes testear todos los **Endpoints CRUD** programáticamente visitando la consola autogenerada nativa:
 👉 **[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)**
