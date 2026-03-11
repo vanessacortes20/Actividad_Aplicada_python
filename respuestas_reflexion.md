@@ -64,20 +64,32 @@ A continuación se presentan las capturas de pantalla de la documentación inter
 
 ### 📸 Prueba 1: POST Exitoso (Carga de Datos)
 *Demostración del endpoint `/analizar/csv` recibiendo un archivo válido y respondiendo con Status Code 200 y las métricas calculadas.*
-![Prueba de POST Exitoso - Code 200](Remplazar_con_URL_de_Github_Aqui)
+
+<img width="1476" height="914" alt="image" src="https://github.com/user-attachments/assets/b9125fa7-bd16-47c0-96be-87f5c5e900e2" />
 
 ### 📸 Prueba 2: POST Denegado (Error de Validación 422)
 *Demostración del endpoint `/analizar/partido` interceptando un Request sin los campos obligatorios gracias a la validación estricta de Pydantic, devolviendo Status Code 422.*
-![Prueba de Error de Validación - Code 422](Remplazar_con_URL_de_Github_Aqui)
+
+<img width="1472" height="894" alt="image" src="https://github.com/user-attachments/assets/bd2431ac-c63c-432b-b6a4-4792b7447ee0" />
+
 
 ### 📸 Prueba 3: GET /historial (Persistencia en Memoria)
 *Demostración del endpoint listando el historial de análisis previamente almacenados, comprobando la persistencia de datos (Status Code 200).*
-![Prueba de GET Historial - Code 200](Remplazar_con_URL_de_Github_Aqui)
+
+<img width="1471" height="908" alt="image" src="https://github.com/user-attachments/assets/be754135-62dc-4a6f-8db5-fc3ade02d362" />
 
 ### 📸 Prueba 4: GET /historial/{id} (Error 404 Controlado)
 *Demostración de manejo de excepciones solicitando un ID de análisis inexistente, lo que genera una respuesta controlada con Status Code 404.*
-![Prueba de Error No Encontrado - Code 404](Remplazar_con_URL_de_Github_Aqui)
+
+<img width="1459" height="923" alt="image" src="https://github.com/user-attachments/assets/3c843aa1-a097-42bc-81bf-e0f24e04dde1" />
+
 
 ### 📸 Prueba 5: DELETE /historial/{id} (Eliminación Exitosa)
 *Demostración del endpoint de borrado eliminando un registro existente en memoria y confirmando la operación con Status Code 200.*
-![Prueba de Eliminación DELETE - Code 200](Remplazar_con_URL_de_Github_Aqui)
+
+<img width="1494" height="917" alt="image" src="https://github.com/user-attachments/assets/eb4aaa2a-f6aa-4eeb-af41-76957b06d645" />
+
+
+### 📸 Prueba 6: Swagger UI + terminal con uvicorn corriendo
+<img width="1555" height="909" alt="image" src="https://github.com/user-attachments/assets/924fa024-c332-49d1-9668-3aa139f3b7f0" />
+
