@@ -3,12 +3,12 @@
 ## Pregunta 1 — Dominio y Validaciones
 **¿Por qué eligió ese dominio? Describa las validaciones Pydantic que implementó y justifique por qué son necesarias para la integridad de los datos en su contexto específico.**
 
-El proyecto comenzó enfocado en el dominio de partidos históricos de fútbol internacional para predecir ganadores basados en locación (local/visitante), un campo con muchas variables categóricas y numéricas. Implementé el modelo Pydantic `PartidoInput` que exige estrictamente que los nombres de los equipos (`equipo_local`, `equipo_visitante`) sean textos (`str`) y que los marcadores (`goles_local`, `goles_visitante`) sean enteros (`int`). Estas validaciones son críticas en el contexto matemático de la API: si un cliente mandara goles como texto ("cinco"), operaciones de agregación y sumas (`total_goles = goles_local + goles_visitante`) fallarían, rompiendo toda la lógica del análisis estadístico y corrompiendo el estado de la aplicación.
+Elegí trabajar con datos de fútbol histórico porque tiene una combinación interesante de variables de texto (países, equipos) y números (goles) que son ideales para graficar. Para proteger esto, creé el modelo Pydantic `PartidoInput`. Este modelo exige que los nombres de los equipos ingresen como texto (`str`) y los goles como números enteros (`int`). Estas validaciones son vitales para mi proyecto porque el motor interno que construí usa la librería Pandas para sumar los goles y sacar promedios. Si alguien enviara la palabra "cinco" en lugar del número `5`, la matemática de mi código fallaría al intentar sumar letras con números, corrompiendo la tabla general y los gráficos del frontend.
 
 ## Pregunta 2 — Sin Validación
 **¿Qué sucedería concretamente en su API si eliminara todas las validaciones Pydantic? Dé un ejemplo de un JSON malformado específico para su dominio y explique qué error produciría.**
 
-Sin Pydantic, la API intentaría procesar ciegamente cualquier basura que le llegue. Por ejemplo, al enviar este JSON:
+Si quitara Pydantic, la API confiaría a ciegas en lo que mande el cliente. Por ejemplo, si un usuario envía este JSON:
 ```json
 {
   "equipo_local": "Colombia",
@@ -17,12 +17,12 @@ Sin Pydantic, la API intentaría procesar ciegamente cualquier basura que le lle
   "goles_visitante": null
 }
 ```
-En el código de `main.py`, la línea `goles_local + goles_visitante` intentaría sumar el texto `"dos"` con el objeto `None`. Esto detonaría una excepción interna de Python (TypeError) y colapsaría el endpoint, devolviéndole al usuario un error fatal `Code 500 Internal Server Error`, en lugar de un mensaje controlado que le explique qué campo ingresó mal (`Code 422`).
+Como ya no hay filtro, el JSON pasaría directo a mi archivo `main.py`. Ahí, cuando el código intente ejecutar `goles_local + goles_visitante`, Python intentaría literalmente sumar la cadena `"dos"` con el objeto `None`. Esto provocaría un `TypeError` interno inmediato, la aplicación colapsaría y el usuario de la web recibiría un error 500 (Internal Server Error) genérico, en lugar de recibir un mensaje claro de que se equivocó llenando el formulario (Error 422).
 
 ## Pregunta 3 — Escalabilidad
 **Si su API recibiera 10,000 requests por minuto, ¿qué problema tendría su implementación actual con el diccionario en memoria? Proponga una alternativa concreta.**
 
-El uso actual del diccionario global (`historial = {}`) en memoria RAM colapsaría rápidamente. 10,000 peticiones por minuto de análisis masivos acabarían con la RAM del servidor en pocos minutos provocando un error "Out of Memory" (OOMKill). Además, si `uvicorn` reinicia el proceso por una falla, absolutamente todos los datos se perderían instantáneamente. Por último, un diccionario de Python básico no es "thread-safe" para bases gigantes con alta concurrencia. La alternativa concreta sería conectar la API a una base de datos real persistente, como **PostgreSQL** usando la librería **SQLAlchemy** (para datos estructurados SQL), o **MongoDB** si se desea guardar los JSON analíticos de manera flexible como documentos.
+El principal problema es que mi código actual guarda todo el historial en un simple diccionario de Python (`historial = {}`) que vive temporalmente en la memoria RAM de mi computadora. Si recibo 10,000 análisis por minuto, la memoria de mi servidor se llenaría rapidísimo y se caería. Además, cada vez que hago algún cambio y el servidor Uvicorn se reinicia, todos los datos que los usuarios subieron se borran instantáneamente. Para llevar el proyecto a un escenario real donde los datos perduren, la alternativa concreta es reemplazar el diccionario por una base de datos de verdad persistente usando, por ejemplo, PostgreSQL administrado con SQLAlchemy, o MongoDB si quisiera guardar todos estos análisis JSON de forma flexible en el disco duro.
 
 ## Pregunta 4 — Flujo Completo
 **Dibuje o describa el flujo completo de un request POST a su endpoint principal: desde que el cliente envía el JSON hasta que recibe la respuesta. Mencione: decorador, Pydantic, función de lógica, y respuesta HTTP.**
@@ -49,12 +49,12 @@ sequenceDiagram
     end
 ```
 
-**Explicación por pasos (Componentes solicitados):**
-1. **El Cliente** envía el archivo o payload JSON a través de POST.
-2. **Decorador:** FastAPI intercepta esto matemáticamente a través de `@app.post("/analizar/partido", response_model=...)`.
-3. **Pydantic:** Actúa instantáneamente como un filtro. Intenta mapear los datos hacia la clase `PartidoInput`. Si hay un error de tipo (ej. letras en vez de números), rechaza y responde un código HTTP `422`.
-4. **Función de Lógica:** Si Pydantic aprueba, se gatilla la función `procesar_partido_individual()`. Aquí ocurre la matemática (ej. sumar goles) y se almacena en memoria (`historial`).
-5. **Respuesta HTTP:** FastAPI toma el return calculado, esconde lo irrelevante formateándolo con el esquema `EstadisticasPartido`, y devuelve al cliente un exitoso Código **200 OK**.
+**Explicación paso a paso:**
+1. **El Cliente** (mi página web o el Swagger) hace un POST y le envía el archivo JSON a la ruta `/analizar/partido`.
+2. **El Decorador:** FastAPI atrapa esa solicitud mágica gracias a que definí `@app.post(...)`.
+3. **Pydantic:** Recibe el JSON y revisa estrictamente que todos los campos cumplan con el modelo `PartidoInput`. Si ve que mandaron texto donde iban números, rechaza la petición y devuelve un error 422.
+4. **Lógica Interna:** Si los datos pasan la prueba, entran a mi función `procesar_partido_individual()`. Aquí es donde Python suma los goles, calcula los ganadores con condicionales y guarda la respuesta en el diccionario que funciona como memoria.
+5. **Respuesta HTTP:** Ya con el cálculo hecho, FastAPI formatea los resultados basándose en la clase `EstadisticasPartido` y se los devuelve a la página web confirmando el éxito con un estado **200 OK**.
 
 ---
 
@@ -91,5 +91,6 @@ A continuación se presentan las capturas de pantalla de la documentación inter
 
 
 ### 📸 Prueba 6: Swagger UI + terminal con uvicorn corriendo
+*Demostración de la API corriendo localmente. Captura de pantalla completa mostrando la interfaz de Swagger UI en el navegador y la terminal de VS Code ejecutando el servidor uvicorn simultáneamente.*
 <img width="1555" height="909" alt="image" src="https://github.com/user-attachments/assets/924fa024-c332-49d1-9668-3aa139f3b7f0" />
 
